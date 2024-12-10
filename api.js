@@ -1,45 +1,44 @@
-// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
-
 const app = express();
-const PORT = 3000;
+const port = 3000;
 
-let aforo = 0;
-let estadoBus = false;
-let puerta1 = 0;
-let puerta2 = 0;
-let subieron = 0;
-let bajaron = 0;
+let sistema = {
+    aforo: 0,
+    estadoBus: false,
+    puerta1: 0,
+    puerta2: 0,
+    subieron: 0,
+    bajaron: 0
+};
 
 app.use(bodyParser.json());
 
+app.get('/datos', (req, res) => {
+    res.json(sistema);
+});
+
 app.post('/command', (req, res) => {
-  const { estado } = req.body;
-  console.log(`Comando para cambiar el bus a: ${estado}`);
-  estadoBus = estado;
-  res.status(200).send('Comando ejecutado');
+    const { estado } = req.body;
+    sistema.estadoBus = estado;
+    sistema.subieron = 0;
+    sistema.bajaron = 0;
+    console.log('Bus activado:', estado);
+
+    res.status(200).send({ success: true });
 });
 
 app.post('/control', (req, res) => {
-  const { puerta1: ang1, puerta2: ang2 } = req.body;
-  console.log(`Actualización ángulos: puerta1=${ang1}, puerta2=${ang2}`);
+    const { puerta1, puerta2 } = req.body;
 
-  puerta1 = ang1;
-  puerta2 = ang2;
+    if (puerta1 !== undefined) sistema.puerta1 = puerta1;
+    if (puerta2 !== undefined) sistema.puerta2 = puerta2;
 
-  res.status(200).send('Actualización control');
+    console.log('Puertas actualizadas:', sistema);
+
+    res.status(200).send({ success: true });
 });
 
-app.get('/datos', (req, res) => {
-  res.status(200).json({
-    aforo,
-    estadoBus,
-    puerta1,
-    puerta2,
-    subieron,
-    bajaron
-  });
+app.listen(port, () => {
+    console.log(`Servidor escuchando en http://localhost:${port}`);
 });
-
-app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
