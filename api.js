@@ -1,54 +1,50 @@
-// Importar dependencias
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-// Configuración del servidor
 const app = express();
 const port = 3000;
 
 // Middleware
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
 
 // Variables para almacenar los datos
-let entradas = 0;
-let salidas = 0;
-let puerta1 = 0; // Estado inicial de la puerta 1
-let puerta2 = 0; // Estado inicial de la puerta 2
+let datos = {
+  entradas: 0,
+  salidas: 0,
+  puerta1: 0, // Ejemplo: puede representar grados del servo
+  puerta2: 0  // Ejemplo: puede representar grados del servo
+};
 
-// Endpoint para recibir datos desde la ESP32
-app.post("/datos", (req, res) => {
-  const { entradas: newEntradas, salidas: newSalidas, puerta1: newPuerta1, puerta2: newPuerta2 } = req.body;
+// Ruta para recibir datos desde la placa
+app.post('/datos', (req, res) => {
+  const { entradas, salidas } = req.body;
 
-  if (newEntradas !== undefined) entradas = newEntradas;
-  if (newSalidas !== undefined) salidas = newSalidas;
-  if (newPuerta1 !== undefined) puerta1 = newPuerta1;
-  if (newPuerta2 !== undefined) puerta2 = newPuerta2;
+  if (typeof entradas !== 'undefined') datos.entradas = entradas;
+  if (typeof salidas !== 'undefined') datos.salidas = salidas;
 
-  console.log(`Datos recibidos: Entradas = ${entradas}, Salidas = ${salidas}, Puerta1 = ${puerta1}, Puerta2 = ${puerta2}`);
-
-  res.status(200).json({ message: "Datos recibidos correctamente" });
+  console.log('Datos recibidos de la placa:', req.body);
+  res.json({ message: 'Datos recibidos correctamente', datos });
 });
 
-// Endpoint para enviar los datos actuales a la ESP32
-app.get("/datos", (req, res) => {
-  res.status(200).json({ entradas, salidas, puerta1, puerta2 });
+// Ruta para enviar datos desde la web a la placa
+app.get('/datos', (req, res) => {
+  res.json(datos);
 });
 
-// Endpoint para actualizar los estados de las puertas desde la web
-app.post("/puertas", (req, res) => {
-  const { puerta1: newPuerta1, puerta2: newPuerta2 } = req.body;
+// Ruta para actualizar los valores de puerta1 y puerta2 desde la web
+app.post('/actualizar-puertas', (req, res) => {
+  const { puerta1, puerta2 } = req.body;
 
-  if (newPuerta1 !== undefined) puerta1 = newPuerta1;
-  if (newPuerta2 !== undefined) puerta2 = newPuerta2;
+  if (typeof puerta1 !== 'undefined') datos.puerta1 = puerta1;
+  if (typeof puerta2 !== 'undefined') datos.puerta2 = puerta2;
 
-  console.log(`Puertas actualizadas: Puerta1 = ${puerta1}, Puerta2 = ${puerta2}`);
-
-  res.status(200).json({ message: "Puertas actualizadas correctamente", puerta1, puerta2 });
+  console.log('Datos de puertas actualizados desde la web:', req.body);
+  res.json({ message: 'Puertas actualizadas correctamente', datos });
 });
 
 // Iniciar el servidor
 app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
+  console.log(`Servidor escuchando en http://localhost:${port}`);
 });
