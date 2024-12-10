@@ -6,55 +6,40 @@ const app = express();
 const PORT = 3000;
 
 let aforo = 0;
+let estadoBus = false;
 let puerta1 = 0;
 let puerta2 = 0;
-let estado = false;
 let subieron = 0;
 let bajaron = 0;
 
 app.use(bodyParser.json());
 
-// Endpoint para recibir datos desde la placa Arduino y actualizar el estado
-app.post('/datos', (req, res) => {
-  const data = req.body;
-
-  aforo = data.aforo || aforo;
-  puerta1 = data.puerta1 || puerta1;
-  puerta2 = data.puerta2 || puerta2;
-  estado = data.estado || estado;
-  subieron = data.subieron || subieron;
-  bajaron = data.bajaron || bajaron;
-
-  console.log('Datos recibidos:');
-  console.log(`Aforo: ${aforo}`);
-  console.log(`Puerta1: ${puerta1}`);
-  console.log(`Puerta2: ${puerta2}`);
-  console.log(`Estado: ${estado}`);
-  console.log(`Subieron: ${subieron}`);
-  console.log(`Bajaron: ${bajaron}`);
-
-  res.status(200).json({
-    aforo,
-    puerta1,
-    puerta2,
-    estado,
-    subieron,
-    bajaron
-  });
+app.post('/command', (req, res) => {
+  const { estado } = req.body;
+  console.log(`Comando para cambiar el bus a: ${estado}`);
+  estadoBus = estado;
+  res.status(200).send('Comando ejecutado');
 });
 
-// Endpoint para enviar datos a la placa Arduino
+app.post('/control', (req, res) => {
+  const { puerta1: ang1, puerta2: ang2 } = req.body;
+  console.log(`Actualización ángulos: puerta1=${ang1}, puerta2=${ang2}`);
+
+  puerta1 = ang1;
+  puerta2 = ang2;
+
+  res.status(200).send('Actualización control');
+});
+
 app.get('/datos', (req, res) => {
   res.status(200).json({
     aforo,
+    estadoBus,
     puerta1,
     puerta2,
-    estado,
     subieron,
     bajaron
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
